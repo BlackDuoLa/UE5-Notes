@@ -18,11 +18,15 @@
 
 ## 基础操作
 
+日志打印
 
+UE_LOG(LogTemp,Error,TEXT("okk"));
+UE_LOG(LogTemp,Warning,TEXT("okk"));
+UE_LOG(LogTemp,Display,TEXT("okk"));
 
-待添加ing
+屏幕打印
 
-
+GEngine->AddOnScreenDebugMessage(-1, 5. 0f, FColor: :Red, TEXT("My Name is ok”))
 
 
 
