@@ -20,7 +20,7 @@
 
 
 
-
+待添加ing
 
 
 
@@ -144,7 +144,7 @@ class GAME_DUO_API UDuoAttributeSet : public UAttributeSet
 | GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName)               | 这个宏定义了一个setter函数，用于设置`PropertyName`属性的值。这个函数通常会用来更新属性的数值，并可能触发相应的事件或回调。 |
 | GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)              | 这个宏定义了一个初始化函数，用于初始化`PropertyName`属性的值。这通常在对象创建时被调用，以确保属性有一个默认的初始值。 |
 | .CPP                                                       |                                                              |
-| DOREPLIFETIME_CONDITION_NOTIFY                             | 用于指定类的属性如何进行网络同步。DOREPLIFETIME：用于将类的属性添加到需要同步的属性列表中。CONDITION：这是同步的条件(Replication Condition)。NOTIFY：这是一个通知条件，指定在同步时如何触发回调通知函数 |
+| DOREPLIFETIME_CONDITION_NOTIFY                             | 用于指定类的属性如何进行网络同步。`DOREPLIFETIME`：用于将类的属性添加到需要同步的属性列表中。`CONDITION`：这是同步的条件(Replication Condition)。`NOTIFY`：这是一个通知条件，指定在同步时如何触发回调通知函数 |
 | `COND_OwnerOnly`                                           | 仅向拥有该对象的客户端进行同步                               |
 | `COND_SkipOwner`                                           | 向所有客户端同步，但跳过拥有该对象的客户端                   |
 | `COND_InitialOnly`                                         | 仅在对象首次被创建时进行同步                                 |
