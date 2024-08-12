@@ -30,11 +30,116 @@ GEngine->AddOnScreenDebugMessage(-1, 5. 0f, FColor: :Red, TEXT("My Name is ok”
 
 
 
+#### 代理/委托
+**单播代理**
+描述: 只能绑定一个函数的委托。在某些场景下，你只希望一个函数来响应某个事件，此时可以使用单播委托
 
+| 单播代理 | 返回参数 |
+| ------------------ | ---------- |
+| DECLARE_DELEGATE(NoParamDelegate) | 无返回参数 |
+| DECLARE_DELEGATE_OneParam(OneParamDelegate,int) | 带有一个参数 |
+| DECLARE_DELEGATE_TwoParam(TwoParamDelegate,int,int) | 带有两个参数 |
+|  DECLARE_DELEGATE_ThreeParam(ThreeParamDelegate,int,int,int) | 带有三个参数 |
+| DECLARE_DELEGATE_ReVal(int,ReValParamDelegate) | 带有返回参值 |
 
+```C++
+DECLARE_DELEGATE(NoParamDelegate);
 
+// 声明一个委托实例
+NoParamDelegate MyDelegate;
 
+//创建委托的函数
+void MyDelegate();
 
+// 绑定上面的MyDelegate函数
+MyDelegate.BindUObject(this, ADuoActor::MyDelegate);
+
+// 触发委托
+MyDelegate.ExecuteIfBound();
+
+void ADuoActor::MyDelegate()
+{
+//里面写需要执行的操作
+    GEngine->AddOnScreenDebugMessage(-1, 5. 0f, FColor: :Red, TEXT("已执行函数”))
+}
+```
+**多播代理**
+
+**描述**: 可以绑定多个函数的委托。当事件发生时，所有绑定的函数都会被调用。这在需要多个对象响应同一事件时非常有用。
+
+| 多播代理 | 返回参数 |
+| ------------------ | ---------- |
+| DECLARE_DELEGATE_DELEGATE(NoParamDelegate) | 无返回参数 |
+| DECLARE_MULTICAST_DELEGATE_OneParam(OneParamDelegate,int) | 带有一个参数 |
+| DECLARE_MULTICAST_DELEGATE_TwoParam(TwoParamDelegate,int,int) | 带有两个参数 |
+| DECLARE_MULTICAST_DELEGATE_ThreeParam(ThreeParamDelegate,int,int,int) | 带有三个参数 |
+| DECLARE_MULTICAST_DELEGATE_ReVal(int,ReValParamDelegate) | 带有返回参值 |
+
+``` c++
+DECLARE_MULTICAST_DELEGATE_OneParam(OneParamDelegate,float)
+
+// 声明一个动态委托实例
+OneParamDelegate MyDelegate;
+
+//创建委托的函数
+UFUNCTION()
+void MyDelegate1(float NewHealth);
+UFUNCTION()
+void MyDelegate2(float NewMana);
+UFUNCTION()
+void MyDelegate3(float NewVigor);
+
+// 触发委托，所有绑定的函数都会被调用
+OneParamDelegate.AddUObject(this, ADuoActor::MyDelegate1);
+OneParamDelegate.AddUObject(this, ADuoActor::MyDelegate2);
+OneParamDelegate.AddUObject(this, ADuoActor::MyDelegate3);
+
+//执行多播代理
+OneParamDelegate.Broadcast("OneParamDelegate")
+
+//函数里面写对应需要执行的操作
+void ADuoActor::MyDelegate1(float NewHealth)
+{
+	//里面写需要执行的操作
+    float Health = 50.f; 
+    GEngine->AddOnScreenDebugMessage(-1, 5. 0f, FColor: :Red, TEXT("已执行函数1”))
+}
+void ADuoActor::MyDelegate2(float NewMana)
+{
+	//里面写需要执行的操作
+    float Mana = 20.f; 
+    GEngine->AddOnScreenDebugMessage(-1, 5. 0f, FColor: :Red, TEXT("已执行函数2”))
+}
+void ADuoActor::MyDelegate3(float NewVigor)
+{
+	//里面写需要执行的操作
+    float Vigor = 30.f; 
+    GEngine->AddOnScreenDebugMessage(-1, 5. 0f, FColor: :Red, TEXT("已执行函数2”))
+}
+
+```
+
+**动态多播代理**
+描述: 支持蓝图绑定的委托，可以在C++和蓝图之间互操作。动态委托主要用于绑定到UFUNCTION函数，特别是在需要序列化的情况下。
+| 动态多播代理 | 返回参数 |
+| ------------------ | ---------- |
+| DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOneParamDelegate,int) | 带有一个参数 |
+| DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParam(FTwoParamDelegate,int,int) | 带有两个参数 |
+| DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParam(FThreeParamDelegate,int,int,int) | 带有三个参数 |
+``` C++
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOneParamDelegate,float);
+
+// 声明一个委托实例
+FOneParamDelegate MyDelegate;
+
+//创建委托的函数
+UPROPERTY(BlueprintAssignable)
+void MyDelegate();
+
+// 执行动态多播代理，绑定在蓝图中进行
+FOneParamDelegate.Broadcast("FOneParamDelegate");
+
+```
 
 ## GAS技能系统
 
