@@ -12,7 +12,7 @@
   >
   > Attribute Set (AS)
 
-
+- **网络复制**
 
 
 
@@ -43,24 +43,50 @@ GEngine->AddOnScreenDebugMessage(-1, 5. 0f, FColor: :Red, TEXT("My Name is ok”
 | DECLARE_DELEGATE_ReVal(int,ReValParamDelegate) | 带有返回参值 |
 
 ```C++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "DuoActor.generated.h"
+//无返回参数
 DECLARE_DELEGATE(NoParamDelegate);
+//带有一个参数
+DECLARE_DELEGATE_OneParam(OneParamDelegate,int)
+//带有两个参数
+DECLARE_DELEGATE_OneParam(OneParamDelegate,int，int)
 
-// 声明一个委托实例
-NoParamDelegate MyDelegate;
 
-//创建委托的函数
-void MyDelegate();
+UCLASS()
+class TEXT_API ADuoActor : public AActor
+{
+	GENERATED_BODY()
+public:	
+	ADuoActor();
+    // 声明一个委托实例(无返回参数)
+	NoParamDelegate MyDelegate1;
+    //创建委托的函数(无返回参数)
+	void MyDelegate();
+protected:
+	virtual void BeginPlay() override;
 
-// 绑定上面的MyDelegate函数
-MyDelegate.BindUObject(this, ADuoActor::MyDelegate);
+};
 
-// 触发委托
-MyDelegate.ExecuteIfBound();
+CPP:
+ADuoActor::ADuoActor()
+{
+    // 绑定上面的MyDelegate1函数(无返回参数)
+	MyDelegate1.BindUObject(this,&ADuoActor::MyDelegate);
+}
+void ADuoActor::BeginPlay()
+{
+	Super::BeginPlay();
+    // 触发委托(无返回参数)
+	MyDelegate1.ExecuteIfBound();
+}
 
 void ADuoActor::MyDelegate()
 {
-//里面写需要执行的操作
-    GEngine->AddOnScreenDebugMessage(-1, 5. 0f, FColor: :Red, TEXT("已执行函数”))
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,TEXT("Add Dele"));
 }
 ```
 **多播代理**
@@ -260,4 +286,82 @@ class GAME_DUO_API UDuoAttributeSet : public UAttributeSet
 | `COND_None`                                                | 无条件同步                                                   |
 | `REPNOTIFY_OnChanged` | 仅当属性的值发生变化时才触发通知回调 |
 | `REPNOTIFY_Always` | 无论值是否变化，只要进行同步就触发回调 |
+
+## Gameplay Effects(GE)
+
+### GE中Source和Target的定义
+
+​	游戏中任何能使属性发生改变的Actor(玩家、敌人、陷阱），用`Source`和`Target`来判断，改变的是自身的属性还是对方的属性
+
+**举例：**玩家有个技能，可以改变防御属性，设置Source就是改变自身的防御数值，设置Target就是改变敌人的防御数值
+
+
+
+#### Source（源）
+
+- **定义**：Source是指触发或应用游戏效果的实体。它可以是玩家、NPC、项目（如武器）、环境元素等任何能够产生效果的对象。
+- **用途**：Source用于确定效果的来源，这可能会影响效果的属性（如强度、类型、持续时间等）。例如，不同来源的伤害效果可能有不同的伤害值或效果类型。
+- **例子**：假设在一个射击游戏中，玩家（作为Source）使用一把步枪射击敌人。步枪作为玩家持有的武器，也可以被视为Source的一部分，因为它决定了射击的某些特性（如子弹类型、伤害值等）。当子弹击中敌人时，它触发了一个伤害效果，这个效果的Source就是玩家（或更准确地说，是玩家手中的步枪）。
+
+#### Target（目标）
+
+- **定义**：Target是指游戏效果被应用到的实体。它通常是Source的行为或动作的直接接受者。
+- **用途**：Target定义了效果影响的具体对象，这决定了哪些属性会受到影响（如生命值、速度、防御力等）。
+- **例子**：继续上面的射击游戏例子，当玩家的子弹击中敌人时，敌人就是伤害效果的Target。这个效果将减少敌人的生命值，并可能产生其他效果（如击退、流血等）。
+
+举例：
+
+#### Source（源）的设置
+
+- **定义**：在伤害事件中，Source是指发起攻击或触发效果的实体，即造成伤害的法师玩家。
+
+- 实现方式：
+
+  - 在游戏中，每个玩家（包括法师）都有一个唯一的标识符（如玩家ID）。
+  - 当法师玩家使用技能或攻击其他玩家时，游戏引擎会记录这个动作的发起者（即Source），并将其与相应的玩家ID关联起来。
+  - 伤害计算和其他效果触发逻辑会根据这个Source来执行。
+
+#### Target（目标）的设置
+
+- **定义**：在伤害事件中，Target是指接收攻击或效果的实体，即被伤害的法师玩家。
+
+- 实现方式：
+
+  - 法师玩家在释放技能或进行攻击时，通常会指定一个或多个目标。
+  - 这些目标可以是游戏中的其他玩家、NPC或特定的游戏对象。
+  - 游戏引擎会根据玩家的输入（如鼠标点击、键盘按键等）来确定目标（即Target），并将其与相应的玩家ID或对象ID关联起来。
+  - 一旦目标被确定，伤害计算和其他效果就会应用到这个Target上。
+
+#### 两个法师玩家相互伤害的场景
+
+- 在这个场景中，每个法师玩家既是Source也是潜在的Target。
+- 当法师A攻击法师B时，法师A是Source，法师B是Target。
+- 同时，如果法师B也对法师A进行了反击，那么法师B就变成了Source，而法师A则变成了Target。
+- 游戏引擎会同时处理这两个方向的伤害事件，并根据每个法师的攻击力、防御力、抗性等属性来计算最终的伤害值。
+
+
+
+
+
+## 网络复制
+
+### Replicated
+
+`Replicated` 标志用于指示该属性需要在网络游戏中被复制。当属性被标记为 `Replicated` 时，UE4 的网络复制系统会在需要时自动将该属性的值从服务器发送到所有客户端，或者从客户端发送到服务器（取决于复制的方向和设置）。这通常用于同步所有玩家都可以看到或影响的游戏状态，如玩家的位置、生命值、分数等。
+
+### ReplicatedUsing
+
+`ReplicatedUsing` 标志用于指定一个自定义的回调函数，该函数将在属性被网络复制时调用。这允许开发者在属性值改变并且被网络发送之前或之后执行自定义的逻辑。这对于需要基于属性值变化执行额外操作（如播放动画、更新UI等）的情况非常有用。
+
+**注意：**`ReplicatedUsing` 并不改变属性复制的基本行为；它只是在复制过程中提供了一个额外的钩子（hook）来执行自定义代码。如果你只需要简单的属性复制而不需要额外的逻辑，那么只使用 `Replicated` 标志就足够了。
+
+### 网络属性复制相关的宏
+
+| 宏名称                         | 作用                           | 特点                                               |
+| ------------------------------ | ------------------------------ | -------------------------------------------------- |
+| DOREPLIFETIME                  | 将属性标记为需要网络复制       | 基本复制功能，无额外条件或通知                     |
+| DOREPLIFETIME_CONDITION        | 在基本复制的基础上增加条件判断 | 根据条件决定是否复制属性                           |
+| DOREPLIFETIME_CONDITION_NOTIFY | 结合条件判断和通知机制         | 根据条件决定是否复制属性，并在复制时执行自定义代码 |
+
+
 
