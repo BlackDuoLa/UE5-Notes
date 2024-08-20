@@ -6,11 +6,12 @@
 
 - **基础操作**
 
-- **GAS技能系统**
+- **GameplayAbilities(GAS)技能系统**
 
   > Ability System Component (ASC)
   >
   > Attribute Set (AS)
+  > GameplayEffect(GE)
 
 - **网络复制**
 
@@ -175,27 +176,75 @@ FOneParamDelegate.Broadcast("FOneParamDelegate");
 
 #### 核心功能
 
-​	**管理Gameplay Abilities**：
+##### 1. **能力（Ability）管理**
 
-- `AbilitySystemComponent`可以为角色赋予一组`Gameplay Abilities`，这些能力可以被激活、执行并影响角色的行为。例如，一个角色可能具有跳跃、攻击、治疗等能力，这些能力都由ASC来管理。
+- **激活能力** (`ActivateAbility`)：
+  - 允许角色激活一个能力（Ability），这通常是一个技能或特殊动作，比如施放法术或使用特殊武器攻击。
+- **取消能力** (`CancelAbility`)：
+  - 取消一个正在激活的能力，可以在特定条件下或响应某些事件时取消正在进行的能力。
+- **确认或否定能力激活** (`ConfirmAbility`) / (`DenyAbility`)：
+  - 用于在能力激活的过程中，根据某些条件确认或否定能力的激活。
+- **获取能力** (`GetAbility`)：
+  - 返回角色已拥有的能力（通常是一个 `GameplayAbility` 的子类），可以通过索引或标签等方式获取。
+- **给角色授予能力** (`GiveAbility`)：
+  - 给角色授予一个新的能力，可以是永久性的，也可以是临时的。
+- **移除能力** (`ClearAbility`)：
+  - 从角色身上移除一个能力，通常用于清除临时能力或当角色失去某些条件时。
 
-​	**应用Gameplay Effects**：
+##### 2. **效果（Gameplay Effect）管理**
 
-- ASC负责应用和管理Gameplay Effects（GE）。这些效果通常会改变角色的属性，如增加或减少健康值、施加状态效果（如减速、眩晕等）。ASC确保这些效果能够正确地应用到角色上，并处理它们的生命周期。
+- **应用效果** (`ApplyGameplayEffectToTarget`)：
+  - 将一个 `GameplayEffect` 应用到指定目标上，这可以是正面效果（如增益Buff）或负面效果（如减益Debuff）。
+- **移除效果** (`RemoveActiveGameplayEffect`)：
+  - 移除一个已经应用的 `GameplayEffect`，通常在效果到期或条件不再满足时移除。
+- **获取当前应用的效果** (`GetActiveGameplayEffect`)：
+  - 获取并查询角色当前正在受影响的所有效果，返回一个效果列表或某个特定的效果实例。
 
-​	**管理Gameplay Attributes**：
+##### 3. **属性（Attribute）管理**
 
-- Gameplay Attributes是ASC管理的属性值，通常与角色的状态相关，例如健康值、法力值、耐力等。ASC可以通过Gameplay Effects来改变这些属性，并触发相应的事件。
+- **获取属性值** (`GetNumericAttribute`)：
+  - 获取角色当前某个属性的数值（例如生命值、魔法值、耐力值等）。
+- **设置属性值** (`SetNumericAttributeBase`)：
+  - 设置角色某个属性的基础值，这个操作通常会触发属性的重新计算并更新相关效果。
+- **修改属性值** (`AdjustAttributeForMaxChange`)：
+  - 根据最大值的变化调整属性值，常用于处理属性上限变化时自动调整当前值。
 
-​	**处理Gameplay Tags**：
+##### 4. **事件（Event）处理**
 
-- ASC还可以管理`Gameplay Tags`，这些标签用于表示角色的状态或条件（例如，是否处于眩晕状态，是否拥有某种Buff）。这些标签在能力和效果的应用过程中扮演重要角色。
+- **绑定事件** (`BindToGameplayEvent`)：
+  - 将一个事件绑定到能力系统组件上，例如触发某个能力时通知其他系统。
+- **触发事件** (`TriggerGameplayEvent`)：
+  - 在特定条件下或能力操作中触发一个自定义事件，通常用于在不同系统间通信或协调能力行为。
 
-​	**网络同步**：
+##### 5. **冷却时间管理**
 
-- ASC提供了内建的网络同步支持，确保在多人游戏中，能力和效果的应用可以在服务器和客户端之间保持一致。
+- **设置冷却时间** (`SetCooldown`)：
+  - 设置一个能力的冷却时间，防止其在冷却时间内再次使用。
+- **查询冷却时间** (`GetCooldownTimeRemaining`)：
+  - 查询当前冷却时间的剩余时间，通常用于UI显示或判断是否可以再次激活能力。
 
+##### 6. **目标数据处理**
 
+- **应用目标数据** (`ApplyGameplayEffectToTarget`)：
+  - 使用目标数据（Target Data）将一个效果应用到多个目标上。目标数据是指在游戏中被选择或指定的多个目标，可以是范围内的敌人等。
+- **获取目标数据** (`GetTargetData`)：
+  - 获取能力或效果的目标数据，用于进一步处理或应用其他效果。
+
+##### 7. **复制和网络同步**
+
+- **网络同步** (`ReplicateAbility`)：
+  - 在网络环境下，确保能力的激活、效果应用等操作能够在客户端和服务器之间同步。
+- **预测和回滚** (`AbilityPrediction`)：
+  - 对能力的执行进行预测和回滚处理，以减少网络延迟对游戏体验的影响。
+
+##### 8. **查询系统**
+
+- **查询能力** (`HasAbility`)：
+  - 查询角色是否拥有特定能力。
+- **查询效果** (`HasMatchingGameplayTag`)：
+  - 查询角色是否受特定的 `GameplayTag` 影响，可以用于判断某种状态（如角色是否在隐身状态）。
+- **查询属性** (`GetAttributeSet`)：
+  - 获取角色的属性集，通常是一个包含多个属性的集合，用于统一管理角色属性。
 
 
 
@@ -289,6 +338,10 @@ class GAME_DUO_API UDuoAttributeSet : public UAttributeSet
 
 ## Gameplay Effects(GE)
 
+`FGameplayEffectContextHandle`是作为一个容器或引用，指向或包含与游戏效果应用相关的上下文信息
+
+
+
 ### GE中Source和Target的定义
 
 ​	游戏中任何能使属性发生改变的Actor(玩家、敌人、陷阱），用`Source`和`Target`来判断，改变的是自身的属性还是对方的属性
@@ -338,6 +391,10 @@ class GAME_DUO_API UDuoAttributeSet : public UAttributeSet
 - 当法师A攻击法师B时，法师A是Source，法师B是Target。
 - 同时，如果法师B也对法师A进行了反击，那么法师B就变成了Source，而法师A则变成了Target。
 - 游戏引擎会同时处理这两个方向的伤害事件，并根据每个法师的攻击力、防御力、抗性等属性来计算最终的伤害值。
+
+
+
+**函数**
 
 
 
