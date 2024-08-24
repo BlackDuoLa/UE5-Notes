@@ -19,28 +19,93 @@
 
 ## 基础操作
 
-日志打印
+### 打印
 
-UE_LOG(LogTemp,Error,TEXT("okk"));
-UE_LOG(LogTemp,Warning,TEXT("okk"));
-UE_LOG(LogTemp,Display,TEXT("okk"));
+#### 日志打印
 
-屏幕打印
+**Log**: 用于普通信息输出。
 
-GEngine->AddOnScreenDebugMessage(-1, 5. 0f, FColor: :Red, TEXT("My Name is ok”))
+**Warning**: 用于非致命性问题的警告（用于提示非致命性的问题或潜在的错误，程序仍能继续运行）
+
+**Error**: 用于严重错误的报告（用于记录导致程序无法正常运行的错误，通常需要开发人员立即处理）
+
+**Display**: 用于在终端或控制台显示的重要信息。
+
+**Verbose**和**VeryVerbose**: 用于非常详细和极其详细的信息输出，通常用于深度调试。
+
+````c++
+方法一：
+int32 Health = 42; 
+float Mana = 50.f;
+bool MyBool = true;
+FString MyText = TEXT("Hello, Unreal!");
+
+
+//打印自定义文本
+UE_LOG(LogTemp,Log,TEXT("ok"));
+// 打印整数
+UE_LOG(LogTemp, Warning, TEXT("The value of Health is: %d"), Health);
+// 打印浮点数
+UE_LOG(LogTemp, Error, TEXT("The value of Mana is: %f"), Mana);
+// 打印布尔
+UE_LOG(LogTemp, Display, TEXT("The value of MyBool is: %s"), MyBool ? TEXT("True") : TEXT("False"));
+// 打印文本型
+UE_LOG(LogTemp, Verbose, TEXT("The value of MyText is: %d"), *MyText);
+````
+
+**整数**使用`%d`格式化符号。
+
+**浮点数**使用`%f`格式化符号
+
+**布尔值**使用`%s`格式化符号，并通过三元运算符将布尔值转换为`"True"`或`"False"`字符串
+
+**文本**使用`%s`格式化符号，并将`FString`转换为C风格字符串（通过`*`操作符）
+
+#### 屏幕打印
+
+````c++
+	int32 Health = 42; 
+	float Mana = 50.f;
+	bool MyBool = true;
+	FString MyText = TEXT("Hello, Unreal!");
+
+	//屏幕打印自定义文本
+   	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue,TEXT("YES"));
+	//屏幕打印整数
+   	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue,FString::Printf(TEXT("The value of MyFloat is: %d"), MyFloat));
+	//屏幕打印浮点数
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue,FString::Printf(TEXT("The value of MyFloat is: %f"), MyFloat));
+    //屏幕打印布尔
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("The value of MyBool is: %s"), MyBool ? TEXT("True") : TEXT("False")));
+    //屏幕文本型
+	GEngine->AddOnScreenDebugMessage(-1,5.0f,FColor::Yellow,FString::Printf(TEXT("The value of MyText is: %s"), *MyText));
+
+
+方法二：
+    //把相应类型，都转换为FString类型
+    
+   int32 Health = 42;
+    // 将整数类型，转换为FString类型
+    FString THealth = FString::FromInt(Health);
+	//打印转换成FString类型的Health
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue,THealth);
+
+````
 
 
 
-#### 代理/委托
-**单播代理**
+
+
+### 代理/委托
+#### 单播代理
 描述: 只能绑定一个函数的委托。在某些场景下，你只希望一个函数来响应某个事件，此时可以使用单播委托
 
 | 单播代理 | 返回参数 |
 | ------------------ | ---------- |
 | DECLARE_DELEGATE(NoParamDelegate) | 无返回参数 |
 | DECLARE_DELEGATE_OneParam(OneParamDelegate,int) | 带有一个参数 |
-| DECLARE_DELEGATE_TwoParam(TwoParamDelegate,int,int) | 带有两个参数 |
-|  DECLARE_DELEGATE_ThreeParam(ThreeParamDelegate,int,int,int) | 带有三个参数 |
+| DECLARE_DELEGATE_TwoParams(TwoParamDelegate,int,float) | 带有两个参数 |
+| DECLARE_DELEGATE_ThreeParams(ThreeParamDelegate,int,int,int) | 带有三个参数 |
 | DECLARE_DELEGATE_ReVal(int,ReValParamDelegate) | 带有返回参值 |
 
 ```C++
@@ -49,12 +114,13 @@ GEngine->AddOnScreenDebugMessage(-1, 5. 0f, FColor: :Red, TEXT("My Name is ok”
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "DuoActor.generated.h"
+
 //无返回参数
 DECLARE_DELEGATE(NoParamDelegate);
 //带有一个参数
-DECLARE_DELEGATE_OneParam(OneParamDelegate,int)
+DECLARE_DELEGATE_OneParam(OneParamDelegate, int)
 //带有两个参数
-DECLARE_DELEGATE_OneParam(OneParamDelegate,int，int)
+DECLARE_DELEGATE_TwoParams(TwoParamDelegate, int,float)
 
 
 UCLASS()
@@ -63,34 +129,69 @@ class TEXT_API ADuoActor : public AActor
 	GENERATED_BODY()
 public:	
 	ADuoActor();
-    // 声明一个委托实例(无返回参数)
-	NoParamDelegate MyDelegate1;
-    //创建委托的函数(无返回参数)
-	void MyDelegate();
-protected:
-	virtual void BeginPlay() override;
+    virtual void BeginPlay() override;
+    
+    
+    //声明无返回值单播委托实例
+	NoParamDelegate NoMyDelegate;
+    // 声明绑定到委托的函数
+	void NoFunction1();
+    
+	//声明一个返回值单播委托实例
+	OneParamDelegate OneMyDelegate;
+    // 声明绑定到委托的函数
+	void OneFunction(int32 Value);
+    
+	//  声明两个返回值单播委托实例
+	TwoParamDelegate TwoMyDelegate;
+    // 声明绑定到委托的函数
+	void TwoFunction(int32 Value,float Value1);
+
+
 
 };
 
 CPP:
-ADuoActor::ADuoActor()
-{
-    // 绑定上面的MyDelegate1函数(无返回参数)
-	MyDelegate1.BindUObject(this,&ADuoActor::MyDelegate);
-}
+
 void ADuoActor::BeginPlay()
 {
-	Super::BeginPlay();
-    // 触发委托(无返回参数)
-	MyDelegate1.ExecuteIfBound();
+    
+  // 绑定无返回值的函数NoFunction1到委托
+  NoMyDelegate.BindUObject(this, &ADuoActor::NoFunction1);
+  // 调用委托
+  NoMyDelegate.Execute();  
+
+  // 绑定一个返回值的函数OneFunction到委托
+  OneMyDelegate.BindUObject(this, &ADuoActor::OneFunction);
+  // 调用委托
+  OneMyDelegate.Execute(42);  // 传递参数42
+    
+  // 绑定两个返回值的函数TwoFunction到委托
+  TwoMyDelegate.BindUObject(this, &ADuoActor::TwoFunction);
+  // 调用委托
+  TwoMyDelegate.Execute(42,61.f);  // 传递参数整数：42，浮点数：61
+    
 }
 
-void ADuoActor::MyDelegate()
+
+
+//构造函数
+void ADuoActor::NoFunction1()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,TEXT("Add Dele"));
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, TEXT("The No"));
+}
+
+void ADuoActor::OneFunction(int32 Value)
+{
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("The value of MyFloat is: %d"), Value));
+}
+
+void ADuoActor::TwoFunction(int32 Value, float Value1)
+{
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("The value is: %d,The Value1 is %f"), Value, Value1));
 }
 ```
-**多播代理**
+#### 多播代理
 
 **描述**: 可以绑定多个函数的委托。当事件发生时，所有绑定的函数都会被调用。这在需要多个对象响应同一事件时非常有用。
 
@@ -98,55 +199,112 @@ void ADuoActor::MyDelegate()
 | ------------------ | ---------- |
 | DECLARE_DELEGATE_DELEGATE(NoParamDelegate) | 无返回参数 |
 | DECLARE_MULTICAST_DELEGATE_OneParam(OneParamDelegate,int) | 带有一个参数 |
-| DECLARE_MULTICAST_DELEGATE_TwoParam(TwoParamDelegate,int,int) | 带有两个参数 |
-| DECLARE_MULTICAST_DELEGATE_ThreeParam(ThreeParamDelegate,int,int,int) | 带有三个参数 |
+| DECLARE_MULTICAST_DELEGATE_TwoParams(TwoParamDelegate,int,int) | 带有两个参数 |
+| DECLARE_MULTICAST_DELEGATE_ThreeParams(ThreeParamDelegate,int,int,int) | 带有三个参数 |
 | DECLARE_MULTICAST_DELEGATE_ReVal(int,ReValParamDelegate) | 带有返回参值 |
 
 ``` c++
-DECLARE_MULTICAST_DELEGATE_OneParam(OneParamDelegate,float)
+DECLARE_MULTICAST_DELEGATE(NoParamDelegate);//无返回值
+DECLARE_MULTICAST_DELEGATE_OneParam(OneParamDelegate, int32);//一个返回参数
+DECLARE_MULTICAST_DELEGATE_TwoParams(TwoParamDelegate, int32, float);//两个返回参数
 
-// 声明一个动态委托实例
-OneParamDelegate MyDelegate;
 
-//创建委托的函数
-UFUNCTION()
-void MyDelegate1(float NewHealth);
-UFUNCTION()
-void MyDelegate2(float NewMana);
-UFUNCTION()
-void MyDelegate3(float NewVigor);
 
-// 触发委托，所有绑定的函数都会被调用
-OneParamDelegate.AddUObject(this, ADuoActor::MyDelegate1);
-OneParamDelegate.AddUObject(this, ADuoActor::MyDelegate2);
-OneParamDelegate.AddUObject(this, ADuoActor::MyDelegate3);
-
-//执行多播代理
-OneParamDelegate.Broadcast("OneParamDelegate")
-
-//函数里面写对应需要执行的操作
-void ADuoActor::MyDelegate1(float NewHealth)
+UCLASS()
+class TEXT_API ADuoActor : public AActor
 {
-	//里面写需要执行的操作
-    float Health = 50.f; 
-    GEngine->AddOnScreenDebugMessage(-1, 5. 0f, FColor: :Red, TEXT("已执行函数1”))
-}
-void ADuoActor::MyDelegate2(float NewMana)
+	GENERATED_BODY()
+public:	
+	ADuoActor();
+    virtual void BeginPlay() override;
+    
+    //声明无返回值多播委托实例
+	NoParamDelegate NoMulticastDelegate;
+    
+	// 声明绑定到委托的函数
+	void NoFunction1();
+	void NoFunction2();
+
+
+	 //声明无返回值多播委托实例
+	OneParamDelegate OneMulticastDelegate;
+
+	// 声明绑定到委托的函数
+	void OneFunction1(int32 Value);
+	void OneFunction2(int32 Value);
+    
+
+ 	//声明无返回值多播委托实例
+	TwoParamDelegate TwoMulticastDelegate;
+    
+	// 声明绑定到委托的函数
+	void TwoFunction1(int32 Value,float Value1);
+	void TwoFunction2(int32 Value,float Value1);
+
+};
+
+
+CPP:
+
+void ADuoActor::BeginPlay()
 {
-	//里面写需要执行的操作
-    float Mana = 20.f; 
-    GEngine->AddOnScreenDebugMessage(-1, 5. 0f, FColor: :Red, TEXT("已执行函数2”))
+    // 绑定函数到无返回值的多播委托
+    NoMulticastDelegate.AddUObject(this, &ADuoActor::NoFunction1);
+    NoMulticastDelegate.AddUObject(this, &ADuoActor::NoFunction2);
+    // 调用多播委托
+    NoMulticastDelegate.Broadcast();
+
+
+    // 绑定函数到一个返回值的多播委托
+    OneMulticastDelegate.AddUObject(this, &ADuoActor::OneFunction1);
+    OneMulticastDelegate.AddUObject(this, &ADuoActor::OneFunction2);
+    // 调用多播委托
+    OneMulticastDelegate.Broadcast(54);  // 传递参数
+
+    
+	// 绑定函数到两个返回值的多播委托
+    TwoMulticastDelegate.AddUObject(this, &ADuoActor::TwoFunction1);
+    TwoMulticastDelegate.AddUObject(this, &ADuoActor::TwoFunction2);
+    TwoMulticastDelegate.Broadcast(10,15.f);// 传递参数
+    
 }
-void ADuoActor::MyDelegate3(float NewVigor)
+
+//构造函数
+
+void ADuoActor::NoFunction1()
 {
-	//里面写需要执行的操作
-    float Vigor = 30.f; 
-    GEngine->AddOnScreenDebugMessage(-1, 5. 0f, FColor: :Red, TEXT("已执行函数2”))
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan,TEXT("NoFunction1"));
 }
+
+void ADuoActor::NoFunction2()
+{
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("NoFunction2"));
+}
+
+void ADuoActor::OneFunction1(int32 Value)
+{
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("The OneFunction1 is: %d"), Value));
+}
+
+void ADuoActor::OneFunction2(int32 Value)
+{
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("The OneFunction2 is: %d"), Value));
+}
+
+void ADuoActor::TwoFunction1(int32 Value, float Value1)
+{
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("The value1 is: %d,The float is:%f"), Value,Value1));
+}
+
+void ADuoActor::TwoFunction2(int32 Value, float Value1)
+{
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("The value2 is: %d,The float is:%f"), Value,Value1));
+}
+
 
 ```
 
-**动态多播代理**
+#### 动态多播代理
 描述: 支持蓝图绑定的委托，可以在C++和蓝图之间互操作。动态委托主要用于绑定到UFUNCTION函数，特别是在需要序列化的情况下。
 | 动态多播代理 | 返回参数 |
 | ------------------ | ---------- |
