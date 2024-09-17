@@ -92,11 +92,121 @@ UE_LOG(LogTemp, Verbose, TEXT("The value of MyText is: %d"), *MyText);
 
 ````
 
+### UPRPERTY(宏) 
 
+`PROPERTY` 是一个宏，用于标记类中的成员变量，以便让这些变量在引擎的编辑器、序列化、复制等机制中得以使用。它主要用在 C++ 类中，使变量能够与引擎的各种系统交互。具体作用包括：
 
+1. **在编辑器中可见**：标记为 `UPROPERTY` 的变量可以在蓝图编辑器中被查看和修改。常用于自定义类的可调属性，使设计师能够在编辑器中配置。
+2. **序列化**：标记为 `UPROPERTY` 的变量可以在保存和加载时被序列化，确保对象状态的持久性。
+3. **复制**：用于网络同步的变量可以通过 `UPROPERTY` 的标记来支持复制（Replication），使客户端和服务器之间的状态保持一致。
+4. **垃圾回收**：UE5 有自己的垃圾回收机制，使用 `UPROPERTY` 标记的对象引用会自动被引擎追踪，从而避免内存泄漏。
+5. **反射系统**：`UPROPERTY` 是 Unreal 的反射系统的一部分，它允许代码在运行时检查和操作对象的属性。这在蓝图与 C++ 之间进行数据传递时非常有用。
 
+#### 常见修饰符分类
+
+`UPROPERTY` 在 Unreal Engine 5 中有许多修饰符，可以控制属性的编辑权限、可见性、复制行为等。这里是 `UPROPERTY` 的完整语法及常见的修饰符分类和作用：
+
+1. **编辑器和蓝图可见性**
+   - **EditAnywhere**：属性可以在编辑器的任何地方进行编辑。
+   - **EditDefaultsOnly**：只能在类默认值中编辑，不能在实例化对象中编辑。
+   - **EditInstanceOnly**：只能在实例化对象中编辑，不能在类默认值中编辑。
+   - **VisibleAnywhere**：属性在编辑器中可见，但不可编辑。
+   - **VisibleDefaultsOnly**：在类默认值中可见，但不可编辑。
+   - **VisibleInstanceOnly**：在实例化对象中可见，但不可编辑。
+   - **BlueprintReadOnly**：该属性在蓝图中可读，但不可写。
+   - **BlueprintReadWrite**：该属性在蓝图中可读可写。
+2. **复制与网络相关**
+   - **Replicated**：该属性将会在网络上被同步（复制）。
+   - **ReplicatedUsing = FunctionName**：定义一个回调函数，当属性被复制时执行。
+   - **NotReplicated**：显式声明该属性不进行复制（默认行为）。
+   - **RepSkip**：标记该属性在服务器之间的复制时跳过。
+3. **序列化控制**
+   - **SaveGame**：标记该属性将在存档时被序列化。
+   - **Transient**：该属性不会被序列化（不会保存到磁盘或被复制）。
+4. **高级属性**
+   - **Config**：属性可以从配置文件（INI 文件）中加载。
+   - **GlobalConfig**：从全局配置文件加载。
+   - **Localize**：将该属性标记为可本地化。
+   - **Interp**：该属性可以通过动画系统插值。
+   - **DuplicateTransient**：对象在被复制时，该属性不会被复制。
+   - **NonPIEDuplicateTransient**：只在游戏模式下复制，而不是在编辑器模式下。
+   - **TextExportTransient**：导出时不包含该属性。
+   - **Export**：该属性可以通过导出/导入机制进行外部引用。
+   - **Instanced**：属性类型为对象，并且实例化时在运行时创建。
+   - **NoClear**：防止该属性在编辑器中被清空。
+   - **AssetRegistrySearchable**：使该属性可被资产注册表搜索。
+5. **内存管理**
+   - **Reference**：该属性是一个引用类型。
+   - **Pointer**：该属性是一个指针。
+   - **WeakObjectPtr**：表示对其他对象的弱引用，防止引用循环。
+
+### UFUNCTION(宏) 
+
+​	`UFUNCTION` 是一个用于声明类成员函数的宏，它的主要作用是使函数能够与引擎的反射系统、蓝图系统、网络同步等机制进行交互。通过使用 `UFUNCTION`，你可以让 C++ 函数在蓝图中调用、实现网络同步、控制编辑器行为等。
+
+1. **蓝图可调用**： 使用 `UFUNCTION` 可以使 C++ 函数在蓝图中调用。这对于将复杂的 C++ 逻辑暴露给设计师或非程序员团队成员来说非常重要。例如：
+
+上面的函数可以在蓝图中被调用，这样你就能在蓝图节点中直接使用它。
+
+2. **网络复制和同步**： `UFUNCTION` 还可以用于网络游戏中，在服务器和客户端之间同步函数调用。例如，服务器端处理某些事件，而客户端同步这些事件：
+
+这个函数只能在服务器上执行，并且通过网络可靠地调用。
+
+3. **蓝图事件**： `UFUNCTION` 允许在蓝图中实现事件或覆盖函数。这对于让蓝图能够扩展和自定义 C++ 类非常有用：
+
+这个函数没有 C++ 实现，而是留给蓝图来实现。
+
+4. **控制台命令**： 通过 `UFUNCTION`，你可以将函数暴露为控制台命令，方便在游戏运行时通过控制台进行调试或调整：
+
+5. **延迟调用**： `UFUNCTION` 还可以用于声明延迟执行的函数，例如需要等待某个时间或条件的函数：
+
+6. **编辑器相关功能**： 你可以使用 `UFUNCTION` 来定义可以在编辑器中运行的函数，这对于工具开发和编辑器自定义非常有用：
+
+#### 常见修饰符分类
+
+ 1. **蓝图相关**
+
+- **BlueprintCallable**：该函数可以在蓝图中被调用。
+- **BlueprintPure**：表示该函数是纯函数（不会修改对象状态），并且可以在蓝图中被调用。纯函数在调用时不需要执行节点。
+- **BlueprintAuthorityOnly**：该函数只能在服务器端（拥有权）蓝图中调用。
+- **BlueprintCosmetic**：该函数只能在客户端（无拥有权）蓝图中调用。
+- **BlueprintImplementableEvent**：表示该函数没有在 C++ 中实现，而是供蓝图实现。当蓝图实现时，蓝图会覆盖该函数。
+- **BlueprintNativeEvent**：该函数可以在蓝图中被覆盖，但 C++ 中也可以提供默认实现。
+
+2. **网络相关**
+
+- **Server**：表示该函数只能在服务器上调用，通常需要配合 `Reliable` 或 `Unreliable` 使用。
+- **Client**：表示该函数只能在客户端上调用。
+- **NetMulticast**：该函数可以在服务器调用，并广播给所有客户端。
+- **Reliable**：该函数调用通过网络时将被可靠传输（确保到达，但可能有延迟）。
+- **Unreliable**：该函数调用通过网络时将不可靠传输（不保证到达，但更快）。
+- **WithValidation**：用于 `Server` 和 `Client` 函数，表示函数需要验证。你需要实现一个 `_Validate` 函数来验证参数合法性。
+
+ 3. **执行与权限**
+
+- **Exec**：允许该函数通过控制台命令调用。函数的第一个参数通常是 `const FString& Cmd`，即输入的命令字符串。
+- **AuthorityOnly**：仅能在服务器端调用该函数。
+- **Cosmetic**：仅能在客户端调用该函数。
+
+ 4. **线程与性能相关**
+
+- **CallInEditor**：该函数可以在编辑器中运行（无需运行游戏）。
+- **Latent**：标记该函数为延迟函数（即函数可能不会立即完成，比如等待时间、等待某些条件等）。
+- **Category = "CategoryName"**：将函数归类到指定的蓝图节点类别中，方便在蓝图编辑器中找到。
+
+ 5. **函数重载控制**
+
+- **Override**：标记该函数覆盖了父类的虚函数。
+- **Final**：防止该函数被子类覆盖。
+- **Virtual**：声明该函数为虚函数，可以被子类覆盖。
+
+ 6. **安全与内存管理**
+
+- **Static**：标记该函数为静态函数（不依赖类实例）。
+- **Const**：表示该函数不会修改类的状态（只能调用 `const` 成员函数或访问 `const` 成员变量）。
 
 ### 代理/委托
+
 #### 单播代理
 描述: 只能绑定一个函数的委托。在某些场景下，你只希望一个函数来响应某个事件，此时可以使用单播委托
 
@@ -308,21 +418,51 @@ void ADuoActor::TwoFunction2(int32 Value, float Value1)
 描述: 支持蓝图绑定的委托，可以在C++和蓝图之间互操作。动态委托主要用于绑定到UFUNCTION函数，特别是在需要序列化的情况下。
 | 动态多播代理 | 返回参数 |
 | ------------------ | ---------- |
-| DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOneParamDelegate,int) | 带有一个参数 |
-| DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParam(FTwoParamDelegate,int,int) | 带有两个参数 |
-| DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParam(FThreeParamDelegate,int,int,int) | 带有三个参数 |
+| DECLARE_DYNAMIC_MULTICAST_DELEGATE(FNoParamDelegate); |不带参数 |
+| DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOneParamDelegate,int,Value); | 带有一个参数 |
+| DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTwoParamDelegate,int,Value,float,Value1); | 带有两个参数 |
+| DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FThreeParamDelegate,int,Value,float,Value1,bool,Value2); | 带有三个参数 |
 ``` C++
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOneParamDelegate,float);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FNoParamDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOneParamDelegate, int32, Value);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTwoParamDelegates, int32, Value, float, Value1);
 
-// 声明一个委托实例
-FOneParamDelegate MyDelegate;
+UCLASS()
+class TEXT_API ADuoActor : public AActor
+{
+	GENERATED_BODY()
+public:	
+	ADuoActor();
+    virtual void BeginPlay() override;
 
-//创建委托的函数
-UPROPERTY(BlueprintAssignable)
-void MyDelegate();
 
-// 执行动态多播代理，绑定在蓝图中进行
-FOneParamDelegate.Broadcast("FOneParamDelegate");
+	// 声明不带参数的动态委托实例
+	UPROPERTY(BlueprintAssignable)
+	FNoParamDelegate NoMulticastDelegate;
+
+	// 声明带一个参数的动态委托实例
+	UPROPERTY(BlueprintAssignable)
+	FOneParamDelegate OneMulticastDelegate;
+
+	// 声明带两个参数的动态委托实例
+	UPROPERTY(BlueprintAssignable)
+	FTwoParamDelegates TwoMulticastDelegate;
+    
+};
+
+CPP
+
+void AMyActor2::BeginPlay()
+{
+	Super::BeginPlay();
+
+    // 调用多播委托
+	NoMulticastDelegate.Broadcast();
+	OneMulticastDelegate.Broadcast(54);// 传递参数
+	TwoMulticastDelegate.Broadcast(22, 33.f);// 传递参数
+    //在蓝图中进行绑定，输出事件
+    
+}
 
 ```
 
@@ -549,14 +689,6 @@ class GAME_DUO_API UDuoAttributeSet : public UAttributeSet
 - 当法师A攻击法师B时，法师A是Source，法师B是Target。
 - 同时，如果法师B也对法师A进行了反击，那么法师B就变成了Source，而法师A则变成了Target。
 - 游戏引擎会同时处理这两个方向的伤害事件，并根据每个法师的攻击力、防御力、抗性等属性来计算最终的伤害值。
-
-
-
-**函数**
-
-
-
-
 
 ## 网络复制
 
